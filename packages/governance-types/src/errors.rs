@@ -41,4 +41,7 @@ pub enum ContractError {
 
     #[error("CannotFindVote")]
     CannotFindVote {},
+
+    #[error("SenderIsNotWhitelisted")]
+    SenderIsNotWhitelisted {},
 }

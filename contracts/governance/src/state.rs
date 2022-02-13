@@ -2,7 +2,7 @@ use cosmwasm_std::{StdResult, Storage, StdError};
 use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Coin};
 
 // cs-storage-plus docs: https://crates.io/crates/cw-storage-plus
 
@@ -28,6 +28,7 @@ E: From<StdError>,
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Stats {
+    pub in_progress: i32,
     pub rejected_votes: i32,
     pub accepted: i32,
     pub not_resolved: i32,
@@ -55,7 +56,8 @@ pub struct VoteStatus {
     pub votes_abstain: i32,
 
     pub creator: Addr,
-    pub required_balance: i32,
+    pub required_coins_on: bool,
+    pub required_coins: Coin,
     pub min_votes_count: i32,
     pub required_votes_percentage: i32,
     pub already_participate: Vec<Addr>,

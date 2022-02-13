@@ -5,7 +5,7 @@ use governance_types::errors::ContractError;
 use governance_types::types::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::queries::{query_get_vote, query_config, query_get_votes_titles, query_get_stats};
 use crate::state::{Config, Stats, store_config, store_stats};
-use crate::execute::{ execute_new_vote, execute_vote };
+use crate::execute::{ execute_new_vote, execute_vote, execute_pause, execute_unpause, execute_toogle_whitelist, execute_toogle_required_coin};
 
 // Method is executed when a new contract instance is created. You can treat it as a constructor.
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -26,6 +26,7 @@ pub fn instantiate(
         accepted: 0,
         not_resolved: 0,
         paused: 0,
+        in_progress: 0
     };
     store_stats(deps.storage, &stats)?;
     
@@ -48,21 +49,23 @@ pub fn execute(
     match msg {
         ExecuteMsg::CreateNewVote { 
             title,
-            required_balance,
             min_votes_count,
             required_votes_percentage,
             whitelist_on,
-            whitelist
+            whitelist,
+            required_coins_on,
+            required_coin,
         } => execute_new_vote(
                 deps, 
                 _env, 
                 info,  
                 title,
-                required_balance,
                 min_votes_count,
                 required_votes_percentage,
                 whitelist_on,
-                whitelist
+                whitelist,
+                required_coins_on,
+                required_coin,
             ),
         ExecuteMsg::Vote { vote, title } => execute_vote(
             deps, 
@@ -71,6 +74,30 @@ pub fn execute(
             vote,
             title
         ),
+        ExecuteMsg::Pause { title } => execute_pause(
+            deps,
+            _env,
+            info,
+            title
+        ),
+        ExecuteMsg::Unpause { title } => execute_unpause(
+            deps,
+            _env,
+            info,
+            title
+        ),
+        ExecuteMsg::ToogleWhitelist { title } => execute_toogle_whitelist(
+            deps,
+            _env,
+            info,
+            title
+        ),
+        ExecuteMsg::ToogleRequiredCoin { title } => execute_toogle_required_coin(
+            deps,
+            _env,
+            info,
+            title
+        )
     }
 }
 
@@ -83,7 +110,6 @@ pub fn query(
     msg: QueryMsg
 ) -> Result<Binary, ContractError> {
     match msg {
-        // TODO implement missing even handlers
         QueryMsg::Config {} => {
             Ok(to_binary(&query_config(deps)?)?)
             // return config
@@ -95,9 +121,6 @@ pub fn query(
         QueryMsg::GetVote { title } => {
             Ok(to_binary(&query_get_vote(deps, title)?)?)
             // return specific vote
-        }
-        QueryMsg::GetVoter { .. } => {
-            Ok(to_binary(&{})?)
         }
         QueryMsg::GetStats {} => {
             Ok(to_binary(&query_get_stats(deps)?)?)

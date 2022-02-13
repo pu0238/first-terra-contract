@@ -2,7 +2,7 @@
 mod test {
 
     use cosmwasm_std::testing::{mock_dependencies_with_balances, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary};
+    use cosmwasm_std::{coin, coins, from_binary};
     use governance_types::types::{InstantiateMsg, QueryMsg, ExecuteMsg};
     use crate::state::{Config, VoteStatus, Stats};
     use crate::contract::{execute, instantiate, query};
@@ -36,11 +36,12 @@ mod test {
         let info = mock_info("creator", &coins(1000, "earth"));
         let new_vote = ExecuteMsg::CreateNewVote {
             title: "some title".to_string(),
-            required_balance: 1,
             min_votes_count: 1,
             required_votes_percentage: 1,
             whitelist_on: false,
             whitelist: vec![],
+            required_coins_on: false,
+            required_coin: coin(1, "test"),
         };
         let res = execute(deps.as_mut(), mock_env(), info, new_vote).unwrap();
 
@@ -64,6 +65,6 @@ mod test {
 
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetStats {}).unwrap();
         let value: Stats = from_binary(&res).unwrap();
-        assert_eq!(value.not_resolved, 1);
+        assert_eq!(value.in_progress, 1);
     }
 }

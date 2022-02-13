@@ -34,3 +34,11 @@ pub fn already_participate(vote: VoteStatus, voter: Addr) -> Result<bool, Contra
     }
     return Ok(false);
 }
+pub fn is_whitelisted(vote: VoteStatus, voter: Addr) -> Result<bool, ContractError>{
+    for whitelisted_voter in vote.whitelist.clone() {
+        if whitelisted_voter == voter {
+            return Ok(true);
+        }
+    }
+    return Ok(false);
+}
