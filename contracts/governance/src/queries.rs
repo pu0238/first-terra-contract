@@ -1,15 +1,10 @@
 use cosmwasm_std::Deps;
 use governance_types::errors::ContractError;
-use governance_types::types::ConfigResponse;
+use crate::state::{Config, read_config};
 
 pub fn query_config(
-    _deps: Deps,
-) -> Result<ConfigResponse, ContractError> {
-    let owner = String::from("");
-
-    let resp = ConfigResponse {
-        owner
-    };
-
-    Ok(resp)
+    deps: Deps,
+) -> Result<Config, ContractError> {
+    let config = read_config(deps.storage)?;
+    Ok(config)
 }

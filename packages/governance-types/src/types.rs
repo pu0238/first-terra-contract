@@ -10,11 +10,6 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Vote { vote: String },
-    CloseVote {},
-    OpenVote {},
-    AddAdmins { admins: Vec<Addr> },
-    RemoveAdmins { admins: Vec<Addr> },
     CreateNewVote { 
         title: String,
         required_balance: i32,
