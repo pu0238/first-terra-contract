@@ -43,7 +43,7 @@ mod test {
             required_coins_on: false,
             required_coin: coin(1, "test"),
         };
-        let res = execute(deps.as_mut(), mock_env(), info, new_vote).unwrap();
+        let _res = execute(deps.as_mut(), mock_env(), info, new_vote).unwrap();
 
         let get_vote = QueryMsg::GetVote {
             title: "sdsd".to_string()

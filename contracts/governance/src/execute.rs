@@ -186,7 +186,6 @@ pub fn execute_toogle_whitelist(
     if None == vote{
         return Err(ContractError::CannotFindVote {});
     }
-    let vote = &vote.unwrap();
     update_vote(deps.storage, &title, |mut _vote_status | -> Result<_, ContractError> {
         let mut vote_status = _vote_status.unwrap();
         vote_status.whitelist_on != vote_status.whitelist_on;
@@ -209,7 +208,6 @@ pub fn execute_toogle_required_coin(
     if None == vote{
         return Err(ContractError::CannotFindVote {});
     }
-    let vote = &vote.unwrap();
     update_vote(deps.storage, &title, |mut _vote_status | -> Result<_, ContractError> {
         let mut vote_status = _vote_status.unwrap();
         vote_status.required_coins_on != vote_status.required_coins_on;
