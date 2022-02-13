@@ -4,7 +4,7 @@ mod test {
     use cosmwasm_std::testing::{mock_dependencies_with_balances, mock_env, mock_info};
     use cosmwasm_std::{coins, from_binary};
     use governance_types::types::{InstantiateMsg, QueryMsg, ExecuteMsg};
-    use crate::state::{Config};
+    use crate::state::{Config, VoteStatus, Stats};
     use crate::contract::{execute, instantiate, query};
 
     #[test]
@@ -44,5 +44,26 @@ mod test {
         };
         let res = execute(deps.as_mut(), mock_env(), info, new_vote).unwrap();
 
+        let get_vote = QueryMsg::GetVote {
+            title: "sdsd".to_string()
+        };
+        let res = query(deps.as_ref(), mock_env(), get_vote).unwrap();
+        let value: Option<VoteStatus> = from_binary(&res).unwrap();
+        assert_eq!(value, None);
+
+        let get_vote = QueryMsg::GetVote {
+            title: "some title".to_string()
+        };
+        let res = query(deps.as_ref(), mock_env(), get_vote).unwrap();
+        let value: VoteStatus = from_binary(&res).unwrap();
+        assert_eq!(value.whitelist_on, false);
+
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::Config {}).unwrap();
+        let value: Config = from_binary(&res).unwrap();
+        assert_eq!(value.votes_titles, vec!["some title".to_string()]);
+
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetStats {}).unwrap();
+        let value: Stats = from_binary(&res).unwrap();
+        assert_eq!(value.not_resolved, 1);
     }
 }

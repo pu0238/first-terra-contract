@@ -18,8 +18,8 @@ pub enum ContractError {
     #[error("FailedToUpdateData")]
     FailedToUpdateData {},
 
-    #[error("VoteIsClosed")]
-    VoteIsClosed {},
+    #[error("VoteIsPaused")]
+    VoteIsPaused {},
 
     #[error("VoterAlreadyParticipate")]
     VoterAlreadyParticipate {},
@@ -35,4 +35,10 @@ pub enum ContractError {
 
     #[error("SenderIsNotAdmin")]
     SenderIsNotAdmin {},
+
+    #[error("VoteAlreadyExist")]
+    VoteAlreadyExist {},
+
+    #[error("CannotFindVote")]
+    CannotFindVote {},
 }

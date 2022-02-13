@@ -1,5 +1,4 @@
-use cosmwasm_std::{StdResult, Storage};
-use cosmwasm_std::{StdError};
+use cosmwasm_std::{StdResult, Storage, StdError};
 use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -11,6 +10,7 @@ use cosmwasm_std::Addr;
 pub struct Config {
     pub owner: Addr,
     pub admins: Vec<Addr>,
+    pub votes_titles: Vec<String>,
 }
 const CONFIG: Item<Config> = Item::new("\u{0}\u{6}config");
 pub fn store_config(storage: &mut dyn Storage, config: &Config) -> StdResult<()> {
@@ -19,8 +19,12 @@ pub fn store_config(storage: &mut dyn Storage, config: &Config) -> StdResult<()>
 pub fn read_config(storage: &dyn Storage) -> StdResult<Config> {
     CONFIG.load(storage)
 }
-
-
+pub fn update_config <A, E> (storage: &mut dyn Storage, action: A) -> Result<Config, E> where
+A: FnOnce(Config) -> Result<Config, E>,
+E: From<StdError>,
+{
+    CONFIG.update(storage, action)
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Stats {
@@ -36,7 +40,12 @@ pub fn store_stats(storage: &mut dyn Storage, config: &Stats) -> StdResult<()> {
 pub fn read_stats(storage: &dyn Storage) -> StdResult<Stats> {
     STATS.load(storage)
 }
-
+pub fn update_stats <A, E> (storage: &mut dyn Storage, action: A) -> Result<Stats, E> where
+A: FnOnce(Stats) -> Result<Stats, E>,
+E: From<StdError>,
+{
+    STATS.update(storage, action)
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct VoteStatus {
@@ -49,19 +58,23 @@ pub struct VoteStatus {
     pub required_balance: i32,
     pub min_votes_count: i32,
     pub required_votes_percentage: i32,
+    pub already_participate: Vec<Addr>,
     pub whitelist_on: bool,
     pub whitelist: Vec<Addr>,
 }
 
 const VOTES: Map<&str, VoteStatus> = Map::new("VOTES");
 
-pub fn load_vote (storage: &dyn Storage, key: &str) -> StdResult<Option<VoteStatus>> {
+pub fn may_load_vote (storage: &dyn Storage, key: &String) -> StdResult<Option<VoteStatus>> {
     VOTES.may_load(storage, key)
 }
-pub fn store_vote (storage: &mut dyn Storage, key: &str, data: VoteStatus) -> StdResult<()> {
+pub fn load_vote (storage: &dyn Storage, key: &String) -> StdResult<VoteStatus> {
+    VOTES.load(storage, key)
+}
+pub fn store_vote (storage: &mut dyn Storage, key: &String, data: VoteStatus) -> StdResult<()> {
     VOTES.save(storage, key, &data)
 }
-pub fn update_vote <A, E> (storage: &mut dyn Storage, key: &str, action: A ) -> Result<VoteStatus, E> where
+pub fn update_vote <A, E> (storage: &mut dyn Storage, key: &String, action: A ) -> Result<VoteStatus, E> where
 A: FnOnce(Option<VoteStatus>) -> Result<VoteStatus, E>,
 E: From<StdError>, {
     VOTES.update(storage, key, action)

@@ -4,3 +4,4 @@ pub mod state;
 pub mod queries;
 pub mod test;
 pub mod assert;
+pub mod stats;

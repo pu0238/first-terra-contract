@@ -3,9 +3,9 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_binary};
 use governance_types::errors::ContractError;
 use governance_types::types::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::queries::query_config;
+use crate::queries::{query_get_vote, query_config, query_get_votes_titles, query_get_stats};
 use crate::state::{Config, Stats, store_config, store_stats};
-use crate::execute::{execute_new_vote};
+use crate::execute::{ execute_new_vote, execute_vote };
 
 // Method is executed when a new contract instance is created. You can treat it as a constructor.
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -18,6 +18,7 @@ pub fn instantiate(
     let config = Config {
         owner: info.sender.clone(),
         admins: msg.admins,
+        votes_titles: vec![]
     };
     store_config(deps.storage, &config)?;
     let stats = Stats {
@@ -63,6 +64,13 @@ pub fn execute(
                 whitelist_on,
                 whitelist
             ),
+        ExecuteMsg::Vote { vote, title } => execute_vote(
+            deps, 
+            _env, 
+            info,  
+            vote,
+            title
+        ),
     }
 }
 
@@ -78,12 +86,22 @@ pub fn query(
         // TODO implement missing even handlers
         QueryMsg::Config {} => {
             Ok(to_binary(&query_config(deps)?)?)
+            // return config
+        }
+        QueryMsg::GetVotesTitles {} => {
+            Ok(to_binary(&query_get_votes_titles(deps)?)?)
+            // return all votes by title
+        }
+        QueryMsg::GetVote { title } => {
+            Ok(to_binary(&query_get_vote(deps, title)?)?)
+            // return specific vote
         }
         QueryMsg::GetVoter { .. } => {
             Ok(to_binary(&{})?)
         }
-        QueryMsg::GetStatus { .. } => {
-            Ok(to_binary(&{})?)
+        QueryMsg::GetStats {} => {
+            Ok(to_binary(&query_get_stats(deps)?)?)
+            // return stats
         }
     }
 }

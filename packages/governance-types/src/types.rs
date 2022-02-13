@@ -17,6 +17,10 @@ pub enum ExecuteMsg {
         required_votes_percentage: i32,
         whitelist_on: bool,
         whitelist: Vec<Addr>,
+    },
+    Vote { 
+        vote: String, 
+        title: String 
     }
 }
 
@@ -25,7 +29,9 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     Config {},
     GetVoter { address: String },
-    GetStatus {},
+    GetStats {},
+    GetVotesTitles {},
+    GetVote { title: String }
 }
 
 // We define a custom struct for each query response
