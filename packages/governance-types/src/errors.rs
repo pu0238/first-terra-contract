@@ -30,9 +30,6 @@ pub enum ContractError {
     #[error("BalanceCannotBeNegative")]
     BalanceCannotBeNegative {},
 
-    #[error("VoteCountCannotBeNegative")]
-    VoteCountCannotBeNegative {},
-
     #[error("SenderIsNotAdmin")]
     SenderIsNotAdmin {},
 
@@ -44,4 +41,7 @@ pub enum ContractError {
 
     #[error("SenderIsNotWhitelisted")]
     SenderIsNotWhitelisted {},
+
+    #[error("SenderDoNotHaveEnoughAmount")]
+    SenderDoNotHaveEnoughAmount {},
 }

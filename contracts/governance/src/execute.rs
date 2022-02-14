@@ -3,7 +3,7 @@ use governance_types::errors::ContractError;
 use crate::state::{ VoteStatus, store_vote, update_config, may_load_vote, update_vote };
 use cosmwasm_std::{Addr, Coin};
 use crate::assert::{is_admin, is_owner, is_vote, already_participate, is_whitelisted};
-use crate::stats::{add_in_progress};
+use crate::stats::{add_in_progress, set_to_paused, set_to_un_paused};
 
 pub fn execute_new_vote(
     deps: DepsMut,
@@ -17,11 +17,7 @@ pub fn execute_new_vote(
     required_coins_on: bool,
     required_coins: Coin,
 ) -> Result<Response, ContractError> {
-//  TODO: ADD COINS
-    if min_votes_count < 0{
-        return Err(ContractError::VoteCountCannotBeNegative {});
-    }
-    if required_votes_percentage < 0 || required_votes_percentage > 100 {
+    if required_votes_percentage > 100 {
         return Err(ContractError::WrongVotesPercentage {});
     }
     if is_owner(deps.storage, info.sender.clone()) != Ok(true) {
@@ -67,23 +63,37 @@ pub fn execute_vote (
         return Err(ContractError::CannotFindVote {});
     }
     let vote = vote.unwrap();
-    if Ok(true) != already_participate(vote.clone(), info.sender.clone()) {
+    if Ok(true) == already_participate(vote.clone(), info.sender.clone()) {
         return Err(ContractError::VoterAlreadyParticipate {});
     }
-    if vote.paused == true {
+    if vote.paused {
         return Err(ContractError::VoteIsPaused {});
     }
     if vote.whitelist_on {
-        if Ok(true) != is_whitelisted(vote, info.sender.clone()){
-            return Err(ContractError::SenderIsNotWhitelisted {});
+        if Ok(true) != is_whitelisted(vote.clone(), info.sender.clone()){
+            if is_owner(deps.storage, info.sender.clone()) != Ok(true) {
+                return Err(ContractError::SenderIsNotWhitelisted {});
+            }
         }
     }
-    let a = info.funds;
-    /*
-        TODO: VOTE BASE ON COIN
-    if vote.required_balance == info.funds {
-        return Err(ContractError::VoteIsPaused {});
-    }*/
+    let v = vote.clone();
+    if vote.clone().required_coins_on {
+        let mut finded = false;
+        let mut index = 0;
+        for (i, x) in info.funds.iter().enumerate() {
+            if x.denom == v.required_coins.denom{
+                finded = true;
+                index = i;
+                break;
+            }
+        }
+        if finded == false{
+            return Err(ContractError::SenderDoNotHaveEnoughAmount {});
+        }
+        if info.funds[index].amount < vote.required_coins.amount{
+            return Err(ContractError::SenderDoNotHaveEnoughAmount {});
+        }  
+    }
     return match user_vote.as_str() {
         "For" => vote_for(deps, info.sender, title),
         "Against" => vote_against(deps, info.sender, title),
@@ -143,7 +153,8 @@ pub fn execute_pause(
         vote_status.paused=true;
         Ok(vote_status)
     })?;
-    return Err(ContractError::VoterAlreadyParticipate {});
+    set_to_paused(deps.storage)?;
+    Ok(Response::new().add_attribute("action", "execute pause"))
 }
 pub fn execute_unpause(
     deps: DepsMut,
@@ -169,7 +180,8 @@ pub fn execute_unpause(
         vote_status.paused=false;
         Ok(vote_status)
     })?;
-    return Err(ContractError::VoterAlreadyParticipate {});
+    set_to_un_paused(deps.storage)?;
+    Ok(Response::new().add_attribute("action", "execute unpause"))
 }
 pub fn execute_toogle_whitelist(
     deps: DepsMut,
@@ -191,7 +203,7 @@ pub fn execute_toogle_whitelist(
         vote_status.whitelist_on != vote_status.whitelist_on;
         Ok(vote_status)
     })?;
-    return Err(ContractError::VoterAlreadyParticipate {});
+    Ok(Response::new().add_attribute("action", "execute toogle whitelist"))
 }
 pub fn execute_toogle_required_coin(
     deps: DepsMut,
@@ -213,5 +225,5 @@ pub fn execute_toogle_required_coin(
         vote_status.required_coins_on != vote_status.required_coins_on;
         Ok(vote_status)
     })?;
-    return Err(ContractError::VoterAlreadyParticipate {});
+    Ok(Response::new().add_attribute("action", "execute toogle required coin"))
 }
